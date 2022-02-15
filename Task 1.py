@@ -9,7 +9,7 @@ data_frame = pd.read_csv('pol_regression.csv')
 x_train = data_frame['x']
 y_train = data_frame['y']
 
-def feature_expansion(features, degree):
+def getPolynomialDataMatrix(features, degree):
     X = np.ones(features.shape)
     for i in range(1, degree + 1):
         X = np.column_stack((X, features ** i))
@@ -17,13 +17,13 @@ def feature_expansion(features, degree):
     return X
 
 def pol_regression(x, y, degree):
-    X = feature_expansion(x, degree=degree)
-    first_half = X.transpose().dot(X)
-    weights = np.linalg.solve(first_half, X.transpose().dot(y))
+    X = getPolynomialDataMatrix(x, degree)
+    fh = X.transpose().dot(X)
+    weights = np.linalg.solve(fh, X.transpose().dot(y))
     
     return weights
 
-def calculate_y(x, weights):
+def cal_y(x, weights):
     total = 0
     for i, weight in enumerate(weights):        
         val = weight * (x ** i)
@@ -33,7 +33,7 @@ def calculate_y(x, weights):
 def plot_predictions(weights, features):
     y =[]
     for x in features:
-        y.append(calculate_y(x, weights))
+        y.append(cal_y(x, weights))
 
     return y
     
@@ -43,6 +43,7 @@ def eval_pol_regression(parameters, x, y, degree):
     return RMSE
 
 features = [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]
+
 
 #wd0 = pol_regression(x_train, y_train, degree=0)
 #y0 = plot_predictions(weights=wd0, features=features)
@@ -124,4 +125,32 @@ degrees = [1, 2, 3, 6, 10]
 
 plt.plot(degrees, errors_test, color='red')
 plt.savefig('test_errors.png')
+plt.show()
+
+SSEtrain = np.zeros((10,1))
+SSEtest = np.zeros((10,1))
+MSSEtrain = np.zeros((10,1))
+MSSEtest = np.zeros((10,1))
+
+# Feel free to use the functions getWeightsForPolynomialFit and getPolynomialDataMatrix
+for i in range(1,10):
+    
+    Xtrain = getPolynomialDataMatrix(x_train, i) 
+    Xtest = getPolynomialDataMatrix(x_test, i)
+    
+    w = pol_regression(x_train, y_train, i)  
+    
+    MSSEtrain[i - 1] = np.mean((Xtrain.dot(w) - y_train)**2)
+    MSSEtest[i - 1] = np.mean((Xtest.dot(w) - y_test)**2)
+    
+    errortrain = y_train - Xtrain.dot(w) 
+    errortest = y_test - Xtest.dot(w)
+    SSEtrain[i-1] = errortrain.dot(errortrain)
+    SSEtest[i-1] = errortest.dot(errortest)
+
+plt.figure();
+plt.semilogy(range(1,10), SSEtrain)
+plt.semilogy(range(1,10), SSEtest)
+plt.legend(('SSE on training set', 'SSE on test set'))
+plt.savefig('polynomial_evaluation.png')
 plt.show()
