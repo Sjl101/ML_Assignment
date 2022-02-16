@@ -43,8 +43,8 @@ def kmeans(dataset, k):
         cc = cc.drop(['ac'], axis=1)
         cgnp = cc.to_numpy()
         for x, val in enumerate(centroid):            
-            current_column = cgnp[:, x]
-            mean = np.mean(current_column)
+            cc = cgnp[:, x]
+            mean = np.mean(cc)
             nc[i, x] = mean   
     return centroids, nc, cadf
 centroids, mean_cent, clusassdf = kmeans(data, k=3)
