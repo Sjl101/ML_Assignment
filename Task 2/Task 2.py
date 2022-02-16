@@ -7,9 +7,12 @@ from sklearn.cluster import KMeans
 data = pd.read_csv('Task 2/dog_breeds.csv')
 data.head()
 
+
 def initialise_centroids(dataset, k):
     dt = dataset.to_numpy()
+    #shuffels the data
     np.random.shuffle(dt)
+    #gets k number of row
     centroids = dt[:k, :]
     return centroids
 
@@ -21,7 +24,7 @@ def compute_euclidean_distance(vec_1, vec_2):
 
 def kmeans(dataset, k):
     data_m = dataset.to_numpy()
-    cluster_assigned = np.zeros((len(data_m), 2))
+    ca = np.zeros((len(data_m), 2))
     centroids = initialise_centroids(dataset, k)
     for vi, v in enumerate(data_m):
         centdis = np.zeros(len(centroids))
@@ -29,29 +32,26 @@ def kmeans(dataset, k):
             d = compute_euclidean_distance(v, centroid)
             centdis[i] = d 
         md = np.min(centdis)
-        assigned_cluster = np.argmin(centdis)
-        cluster_assigned[vi] = np.array([md, assigned_cluster])  
+        ac = np.argmin(centdis)
+        ca[vi] = np.array([md, ac])  
     cadf = dataset
-    cadf['assigned_centroid'] = cluster_assigned[:, 1]
+    cadf['ac'] = ca[:, 1]
     nc = np.zeros([k, len(centroids[0])])
     for i, centroid in enumerate(centroids):
         cc = cadf
-        cc = cc[cc['assigned_centroid'] == i]
-        cc = cc.drop(['assigned_centroid'], axis=1)
-        current_group_np = cc.to_numpy()
+        cc = cc[cc['ac'] == i]
+        cc = cc.drop(['ac'], axis=1)
+        cgnp = cc.to_numpy()
         for x, val in enumerate(centroid):            
-            current_column = current_group_np[:, x]
+            current_column = cgnp[:, x]
             mean = np.mean(current_column)
-            nc[i, x] = mean
-        
-        
+            nc[i, x] = mean   
     return centroids, nc, cadf
-
 centroids, mean_cent, clusassdf = kmeans(data, k=3)
 
-km1 = clusassdf[clusassdf['assigned_centroid'] == 0]
-km2 = clusassdf[clusassdf['assigned_centroid'] == 1]
-km3 = clusassdf[clusassdf['assigned_centroid'] == 2]
+km1 = clusassdf[clusassdf['ac'] == 0]
+km2 = clusassdf[clusassdf['ac'] == 1]
+km3 = clusassdf[clusassdf['ac'] == 2]
 #plots the data for the tail length
 plt.scatter(km1['height'],km1['tail length'],color='dodgerblue')
 plt.scatter(km2['height'],km2['tail length'],color='orange')
@@ -62,6 +62,7 @@ plt.scatter(mean_cent[0, 0],mean_cent[1, 1],color='gold')
 plt.scatter(mean_cent[1, 0],mean_cent[1, 1,],color='gold')
 plt.xlabel('Tail Length')
 plt.ylabel('Height')
+plt.savefig('tail_length.png')
 plt.show()
 #plots the data for the leg length
 plt.scatter(km1['height'],km1['leg length'],color='cyan')
@@ -73,4 +74,5 @@ plt.scatter(mean_cent[0, 0],mean_cent[1, 2],color='gold')
 plt.scatter(mean_cent[1, 0],mean_cent[1, 2],color='gold')
 plt.xlabel('Leg Length')
 plt.ylabel('Height')
+plt.savefig('leg_length.png')
 plt.show()

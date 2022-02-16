@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 
 #splits the data depending on their column
-data_frame = pd.read_csv('pol_regression.csv')
+data_frame = pd.read_csv('Task 1\pol_regression.csv')
 x_train = data_frame['x']
 y_train = data_frame['y']
 train_df, test_df = train_test_split(data_frame, test_size=0.3)
