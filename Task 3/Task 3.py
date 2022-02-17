@@ -6,8 +6,13 @@ import tensorflow as tf
 from tensorflow import keras
 from sklearn.model_selection import train_test_split
 from sklearn import preprocessing
+from sklearn import tree
+from sklearn import ensemble
 from sklearn.model_selection import KFold
+from keras.models import Model
+from keras.models import Sequential
 from sklearn.metrics import accuracy_score
+from sklearn import datasets
 
 df = pd.read_csv('Task 3/HIV_RVG.csv')
 print(df)
@@ -19,7 +24,6 @@ def display_boxplot(data, column):
 def statistical_summary(data):
     #mean values, standard deviations, min/max values
     data = data.drop(columns=['Participant Condition'])
-    columns = ["Image number","Bifurcation number","Artery (1)/ Vein (2)","Alpha","Beta","Lambda","Lambda1","Lambda2"]
     min = {}
     max = {}
     mean = {}
@@ -37,7 +41,100 @@ def statistical_summary(data):
     meandf = pd.DataFrame(mean)
     summarydf = pd.concat([mindf, maxdf, meandf])
     print(summarydf)
+    return mindf, maxdf, meandf
 
-display_boxplot(df, 'Alpha')
-display_boxplot(df, 'Beta')
-statistical_summary(df)
+def split_data(data):
+    print('prep')
+    raw = data['Participant Condition'].to_numpy()  
+    le = preprocessing.LabelEncoder()
+    le.fit(raw)
+    labels = le.transform(raw)
+    data['Labels'] = labels
+    traindf, testdf = train_test_split(data, test_size=0.1)
+    return traindf, testdf
+
+def ann10Fold(df, neurons, k):
+    print('prep')
+    raw = df['Participant Condition'].to_numpy()  
+    l = preprocessing.LabelEncoder()
+    l.fit(raw)
+    labels = l.transform(raw)
+    df['Labels'] = labels
+    traindf, testdf = train_test_split(df, test_size=0.1)
+    # Create the neural network:
+    model = keras.models.Sequential([keras.layers.Flatten(input_shape=[5]),keras.layers.Dense(neurons, activation='sigmoid'),keras.layers.Dense(neurons, activation='sigmoid'),keras.layers.Dense(1, activation='sigmoid')])
+    # Complie the model:
+    model.compile(loss='binary_crossentropy',optimizer='sgd',metrics=['accuracy'])
+    k = KFold(n_splits=k, random_state=None)
+    acc_score = []
+    f = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] 
+    f = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+    acc_score = np.zeros(shape=(len(f), 0))  
+    for train_index, test_index in k.split(df):
+        train = df.iloc[train_index]
+        test = df.iloc[test_index]
+        # Select the values to create X:
+        train_x = train[['Alpha', 'Beta', 'Lambda','Lambda1', 'Lambda2']].to_numpy()
+        test_x = test[['Alpha', 'Beta', 'Lambda','Lambda1', 'Lambda2']].to_numpy()
+        # Select the values to create Y:
+        train_y = train[['Labels']].to_numpy()
+        test_y = test[['Labels']].to_numpy(dtype=float)
+        # Reshape the Y values:
+        train_y = np.reshape(train_y, (-1, len(train_y)))
+        train_y = train_y[0]
+        
+        # Train the model here:
+        history = model.fit(train_x, train_y, epochs=30)
+        
+        y_pred = model.predict(test_x)
+        print(y_pred)
+        print(test_y)
+        ypred1d = y_pred.flatten()
+        acc = accuracy_score(ypred1d.round(), test_y)
+        acc_score = np.array([])
+        acc_score = np.append(acc_score, acc)
+        
+    print(acc_score)
+    print(f)
+    
+    average_acc_score = sum(acc_score)/k
+    
+    return average_acc_score, acc_score
+
+def ann(train, test, epochs):
+    # Select values to create X and Y: 
+    tr_y = train[['Labels']].to_numpy()
+    te_y = train[['Labels']].to_numpy()
+    tr_x = train[['Alpha', 'Beta', 'Lambda','Lambda1', 'Lambda2']].to_numpy()
+    te_x = test[['Alpha', 'Beta', 'Lambda','Lambda1', 'Lambda2']].to_numpy()
+    
+    # Reshapes the Y values
+    tr_y = np.reshape(tr_y, (-1, len(tr_y)))
+    te_y = np.reshape(te_y, (-1, len(te_y)))
+    tr_y = tr_y[0]
+    te_y = te_y[0]
+    # Create neural network model
+    model = keras.models.Sequential([keras.layers.Flatten(input_shape=[5]),keras.layers.Dense(500, activation='sigmoid'),keras.layers.Dense(500, activation='sigmoid'),keras.layers.Dense(1, activation='sigmoid')])
+    model.compile(loss='binary_crossentropy',optimizer='sgd',metrics=['accuracy'])
+    # Train the model:
+    h = model.fit(tr_x, tr_y, epochs=epochs)
+    # Present any metrics that it produces:
+    hdf = pd.DataFrame(h.history).plot(figsize=(8, 5))
+    test = f"""accuracy_graph_epoch_{epochs}.png"""
+    plt.grid(True)
+    plt.gca().set_ylim(0, 1)
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.savefig(test)
+    plt.show()
+
+
+k = 10
+#display_boxplot(df, 'Alpha')
+#display_boxplot(df, 'Beta')
+mindf, maxdf, meandf = statistical_summary(df)
+traindata, testdata = split_data(df)
+#ann(traingdata, testdata, 64)
+#ann(traingdata, testdata, 128)
+#ann(traingdata, testdata, 256)
+average_acuracy, acc_scores = ann10Fold(df, 500, 10)
