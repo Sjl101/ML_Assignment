@@ -22,16 +22,24 @@ def compute_euclidean_distance(vec_1, vec_2):
     return distance
 
 def kmeans(dataset, k):
+    ds = []
+    vs = []
+    dis = np.array(ds)
+    vis = np.array(vs)
     dm = dataset.to_numpy()
     #stores assigned cluster and distance
     ca = np.zeros((len(dm), 2))
     centroids = initialise_centroids(dataset, k)
     #measures the distance of each point in each row in the dataset
     for vi, v in enumerate(dm):
-        centdis = np.zeros(len(centroids))
+        centdis = np.zeros(len(centroids))  
         for i, centroid in enumerate(centroids):
             d = compute_euclidean_distance(v, centroid)
-            centdis[i] = d 
+            centdis[i] = d
+            print(d)
+            print(i)
+            dis = np.append(dis, d) 
+            vis = np.append(vis, i)
         md = np.min(centdis)
         ac = np.argmin(centdis)
         ca[vi] = np.array([md, ac])
@@ -49,10 +57,19 @@ def kmeans(dataset, k):
         for x, val in enumerate(centroid):            
             cc = cgnp[:, x]
             mean = np.mean(cc)
-            nc[i, x] = mean   
+            nc[i, x] = mean
+    findf = pd.DataFrame(columns=['iteration_step','objective_function_value'])
+    findf['iteration_step'] = dis.tolist()
+    findf['objective_function_value'] = dis.tolist()
+    findf.sort_values('iteration_step', ascending=True,)
+    plt.plot(findf['iteration_step'], findf['objective_function_value'], color='black')
+    plt.xlabel('iteration_step')
+    plt.ylabel('objective_function_value')
+    plt.savefig('objective_function_value.png')
+    plt.show()
+    
     return centroids, nc, cadf
 centroids, mean_cent, clusassdf = kmeans(data, k=3)
-
 km1 = clusassdf[clusassdf['ac'] == 0]
 km2 = clusassdf[clusassdf['ac'] == 1]
 km3 = clusassdf[clusassdf['ac'] == 2]
@@ -82,3 +99,4 @@ plt.xlabel('Height')
 plt.ylabel('Leg Length')
 plt.savefig('leg_length.png')
 plt.show()
+

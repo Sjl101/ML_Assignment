@@ -19,8 +19,6 @@ print(df)
 
 def display_boxplot(data, column):
     data.boxplot(by='Participant Condition', column=column)
-    test = f"""boxplot_{column}.png"""
-    plt.savefig(test)
     plt.show()
 
 def statistical_summary(data):
@@ -129,11 +127,11 @@ def ann(train, test, epochs):
 
 
 k = 10
-display_boxplot(df, 'Alpha')
-display_boxplot(df, 'Beta')
+#display_boxplot(df, 'Alpha')
+#display_boxplot(df, 'Beta')
 mindf, maxdf, meandf = statistical_summary(df)
 traindata, testdata = split_data(df)
 #ann(traingdata, testdata, 64)
 #ann(traingdata, testdata, 128)
 #ann(traingdata, testdata, 256)
-#acc_scores = ann10Fold(df, 500, 10, 30)
+acc_scores = ann10Fold(df, 500, 10, 30)
